@@ -23,8 +23,7 @@ void *malloc(size_t sz) {
   size_t bounds = cheri_representable_length(sz);
   sz = __builtin_align_up(sz, _Alignof(max_align_t));
 
-  if (new_ptr + sz > heap_start + HEAP_SIZE)
-    return NULL;
+  if (new_ptr + sz > heap_start + HEAP_SIZE) return NULL;
   heap = new_ptr + sz;
   return cheri_bounds_set_exact(new_ptr, bounds);
 }
@@ -33,6 +32,8 @@ void free(void *ptr) { }
 
 void *realloc(void *ptr, size_t sz) {
   void *new_ptr = malloc(sz);
-  if (ptr && new_ptr) memmove(new_ptr, ptr, sz);
+  if (ptr && new_ptr) memmove(new_ptr, ptr,
+    cheri_length_get(ptr) < sz
+    ? cheri_length_get(ptr) : sz);
   return new_ptr;
 }
